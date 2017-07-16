@@ -45,8 +45,11 @@ class BotDetector(object):
         """ Run tests
 
         Tests are defined as methods of the BotDetector class and begin with
-        the name "test_", followed by the test's name. Each test returns an
-        integer or floating point.
+        the name "test_", followed by the test's name. Each test should return
+        an integer or floating point.
+
+        If a test does not return an integer or floating point, it is not
+        added to the results dictionary.
 
         Args:
             user: A dictionary of the twitter user
@@ -69,12 +72,17 @@ class BotDetector(object):
 
         for test_name in tests:
             print("Running test: %s" % test_name)
-            func = getattr(self, "test_%s" % test_name)
-            results[test_name] = func(user, tweets)
+            result = getattr(self, "test_%s" % test_name)(user, tweets)
+            if ((type(result) is int) or (type(result) is float)):
+                results[test_name] = result
+            else:
+                print("Test %s returned invalid value: %s" % (
+                    test_name, result
+                ))
 
         return results
 
-    ## Begin tests
+    ## Test definitions
 
     def test_username_length(self, user, tweets):
         """ Returns the length of the user's screen name """
@@ -98,7 +106,7 @@ class BotDetector(object):
 
         return tweets_with_links / num_tweets
 
-    def test_tweet_source(self, user, tweets):
+    def test_tweet_source_score(self, user, tweets):
         """ Returns the average score of the tweets' sources, where -1 means
         that all tweets came from a mostly human source, 0 means that all
         tweets came from a mixed human/bot source, and 1 means that all tweets
@@ -128,16 +136,30 @@ class BotDetector(object):
         else:
             return sum(scores)/n_scores
 
+    def test_tweet_count(self, user, tweets):
+        """ Returns the number of tweets """
+
+        return len(tweets)
+
+    ## Placeholder test definitions
+
     def test_test(self, user, tweets):
-        """ Always returns 1 """
+        """ For testing purposes: returns 1 """
 
         return 1
+
+    def test_invalid(self, user, tweets):
+        """ For testing purposes: return nothing """
+
+        pass
 
 if (__name__ == "__main__"):
     import pymongo
 
-    collection = pymongo.MongoClient()["local"]["tweets2"]
+    collection = pymongo.MongoClient("localhost:27016")["local"]["geotweets"]
+    #collection = pymongo.MongoClient()["local"]["tweets2"]
     user = collection.aggregate([{"$sample": {"size": 1}}]).next()["user"]
+    print(user["screen_name"])
     tweets = list(collection.find({"user.id": user["id"]}))
 
     print(BotDetector().run_tests(
