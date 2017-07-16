@@ -37,10 +37,14 @@ def main(address, db, collection, output_file = OUTPUT_FILE):
     )
 
     for tweet in cursor:
-        source = tweet["source"].split("/")[2].split("\"")[0]
+        try:
+            source = tweet["source"].split("\"")[1].split("/")[2]
+        except IndexError:
+            continue
 
         if (not source in clients):
-            print("\nFound new client: %s           " % source)
+            sys.stdout.write("\rFound new client: %s          \n" % source)
+            sys.stdout.flush()
             clients[source] = 1
         else:
             clients[source] += 1
@@ -50,7 +54,8 @@ def main(address, db, collection, output_file = OUTPUT_FILE):
         sys.stdout.flush()
 
         if (seen % WRITE_INTERVAL == 0):
-            print("\nWriting snapshot of tallies")
+            sys.stdout.write("\rWriting snapshot of tallies          \n")
+            sys.stdout.flush()
             write(output_file, clients)
 
 
