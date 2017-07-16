@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 
+import configparser
 import crm114 # From https://github.com/ercas/crm114-python
 import csv
 import os
+import shutil
+import sys
+
+import google_safebrowsing
+
+CONFIG_FILE = "config.ini"
+CONFIG_FALLBACK = "config.ini.skel"
 
 TRAINING_DIR = "training/"
 
@@ -18,13 +26,37 @@ class BotDetector(object):
         if (not os.path.isdir(training_dir)):
             os.mkdir(training_dir)
 
+        if (os.path.isfile(CONFIG_FILE)):
+            self.config = configparser.ConfigParser()
+            try:
+                self.config.read(CONFIG_FILE)
+            except configparser.ParsingError as error:
+                print(error)
+                print("Please correct the errors and try again")
+                sys.exit(1)
+        else:
+            print("Could not find %s; copying %s -> %s" % (
+                CONFIG_FILE, CONFIG_FALLBACK, CONFIG_FILE
+            ))
+            shutil.copyfile(CONFIG_FALLBACK, CONFIG_FILE)
+            print("Please edit this file before running again.")
+            sys.exit(1)
+
         # crm classifier
+        print("Initializing CRM114 discriminator")
         self.crm = crm114.Classifier(
             "%s/%s" % (training_dir, CRM114_TRAINING),
             ["spam", "ham"]
         )
 
-        # tweet source
+        # google sbserver client
+        print("Initializing Google Safe Browsing sbserver and client")
+        self.sbclient = google_safebrowsing.SafeBrowsing(
+            api_key = self.config.get("credentials", "google_api_key")
+        )
+
+        # tweet sources dict
+        print("Initializing tweet sources")
         self.tweet_sources = {
             "mostly_human": [],
             "mixed": [],
@@ -41,12 +73,16 @@ class BotDetector(object):
                 elif (mostly_bot == "1"):
                     self.tweet_sources["mostly_bot"].append(client)
 
+        print("Finished initialization\n")
+
     def run_tests(self, user, tweets, tests = "all"):
         """ Run tests
 
         Tests are defined as methods of the BotDetector class and begin with
-        the name "test_", followed by the test's name. Each test should return
-        an integer or floating point.
+        the name "test_", followed by the test's name.
+
+        Each test should take the user's JSON and an array of the user's tweets
+        as arguments and return an integer or floating point.
 
         If a test does not return an integer or floating point, it is not
         added to the results dictionary.
@@ -94,7 +130,7 @@ class BotDetector(object):
 
         return user["followers_count"] / user["friends_count"]
 
-    def test_links_ratio(self, user, tweets):
+    def test_tweets_with_links_proportion(self, user, tweets):
         """ Returns the proportion of tweets containing links """
 
         num_tweets = len(tweets)
@@ -106,7 +142,7 @@ class BotDetector(object):
 
         return tweets_with_links / num_tweets
 
-    def test_tweet_source_score(self, user, tweets):
+    def test_tweet_source_bot_score(self, user, tweets):
         """ Returns the average score of the tweets' sources, where -1 means
         that all tweets came from a mostly human source, 0 means that all
         tweets came from a mixed human/bot source, and 1 means that all tweets
@@ -156,13 +192,20 @@ class BotDetector(object):
 if (__name__ == "__main__"):
     import pymongo
 
+    botdetector = BotDetector()
+
     collection = pymongo.MongoClient("localhost:27016")["local"]["geotweets"]
     #collection = pymongo.MongoClient()["local"]["tweets2"]
-    user = collection.aggregate([{"$sample": {"size": 1}}]).next()["user"]
-    print(user["screen_name"])
-    tweets = list(collection.find({"user.id": user["id"]}))
 
-    print(BotDetector().run_tests(
+    print("Sampling random user")
+    user = collection.aggregate([{"$sample": {"size": 1}}]).next()["user"]
+    print("User: @%s" % user["screen_name"])
+    print("Querying tweets")
+    tweets = list(collection.find({"user.id": user["id"]}))
+    print("Collected %d tweets\n" % len(tweets))
+
+    print("\nResults: %s" % botdetector.run_tests(
         user = user,
-        tweets = tweets
+        tweets = tweets,
+        tests = "all"
     ))
