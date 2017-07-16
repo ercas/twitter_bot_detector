@@ -1,5 +1,6 @@
 *.pyc
 __pycache__
 config.ini
+training/caverlee_2011
 training/crm114
 training/google_safebrowsing.db

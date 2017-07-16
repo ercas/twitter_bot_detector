@@ -8,6 +8,7 @@ import shutil
 import sys
 
 import google_safebrowsing
+from util import train_crm114
 
 CONFIG_FILE = "config.ini"
 CONFIG_FALLBACK = "config.ini.skel"
@@ -15,8 +16,33 @@ CONFIG_FALLBACK = "config.ini.skel"
 TRAINING_DIR = "training/"
 
 # These are located in TRAINING_DIR
-CRM114_TRAINING = "crm114/"
+CRM114_TRAINING = "crm114"
 TWEET_SOURCE_TRAINING = "twitter_clients.csv"
+
+def prompt_yn(prompt):
+    """ Persistent y/n prompt that only accepts yes or no
+
+    Args:
+        prompt: The prompt to be displayed
+
+    Returns:
+        True if the user answered with something that starts with "y" or did
+        not provide an answer; False if the user answered with something that
+        starts with "n"
+    """
+
+    response = input("%s (Y/n) " % prompt)
+
+    if (len(response) == 0):
+        return True
+    else:
+        first = response[0].lower()
+        if ((first == "y")):
+            return True
+        elif (first == "n"):
+            return False
+        else:
+            return prompt_yn(prompt)
 
 class BotDetector(object):
 
@@ -44,15 +70,23 @@ class BotDetector(object):
 
         # crm classifier
         print("Initializing CRM114 discriminator")
-        self.crm = crm114.Classifier(
-            "%s/%s" % (training_dir, CRM114_TRAINING),
-            ["spam", "ham"]
-        )
+        crm114_dir = "%s/%s" % (training_dir, CRM114_TRAINING)
+        if (self.config["setup"]["trained_crm114"] == "n"):
+            print("The CRM114 discriminator must be trained first.")
+            response = prompt_yn("Train now using the caverlee-2011 dataset?")
+            if (response):
+                assert train_crm114.train(crm114_dir), "Training failed"
+                self.config["setup"]["trained_crm114"] = "y"
+                with open(CONFIG_FILE, "w") as f:
+                    self.config.write(f)
+            else:
+                sys.exit(1)
+        self.crm = crm114.Classifier(crm114_dir, ["spam", "ham"])
 
         # google sbserver client
         print("Initializing Google Safe Browsing sbserver and client")
         self.sbclient = google_safebrowsing.SafeBrowsing(
-            api_key = self.config.get("credentials", "google_api_key")
+            api_key = self.config["credentials"]["google_api_key"]
         )
 
         # tweet sources dict
@@ -176,6 +210,29 @@ class BotDetector(object):
         """ Returns the number of tweets """
 
         return len(tweets)
+
+    def test_tweet_crm(self, user, tweets):
+        """ Returns the average CRM114 discriminator classification score
+
+        The crm114 module returns a tuple containing the category and a
+        probability. For this test, there are only two categories - "spam", and
+        "ham", a.k.a. not spam. For spam, the raw probability is used; for not
+        spam, the raw probability is multiplied by negative 1. """
+
+        scores = []
+
+        for tweet in tweets:
+            result = self.crm.classify(tweet["text"])
+            if (result[0] == "ham"):
+                scores.append(-result[1])
+            else:
+                scores.append(result[1])
+
+        n_scores = len(scores)
+        if (n_scores == 0):
+            return 0
+        else:
+            return sum(scores)/n_scores
 
     ## Placeholder test definitions
 
