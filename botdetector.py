@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 import crm114 # From https://github.com/ercas/crm114-python
+import csv
 import os
 
 TRAINING_DIR = "training/"
 
-CRM114_TRAINING_SUBDIR = "crm114/"
+# These are located in TRAINING_DIR
+CRM114_TRAINING = "crm114/"
+TWEET_SOURCE_TRAINING = "twitter_clients.csv"
 
 class BotDetector(object):
 
@@ -15,13 +18,35 @@ class BotDetector(object):
         if (not os.path.isdir(training_dir)):
             os.mkdir(training_dir)
 
+        # crm classifier
         self.crm = crm114.Classifier(
-            "%s/%s" % (training_dir, CRM114_TRAINING_SUBDIR),
+            "%s/%s" % (training_dir, CRM114_TRAINING),
             ["spam", "ham"]
         )
 
+        # tweet source
+        self.tweet_sources = {
+            "mostly_human": [],
+            "mixed": [],
+            "mostly_bot": []
+        }
+        with open("%s/%s" % (TRAINING_DIR, TWEET_SOURCE_TRAINING), "r") as f:
+            for row in csv.DictReader(f):
+                mostly_bot = row["MOSTLY_BOT"]
+                client = row["CLIENT"]
+                if (mostly_bot == "-1"):
+                    self.tweet_sources["mostly_human"].append(client)
+                elif (mostly_bot == "0"):
+                    self.tweet_sources["mixed"].append(client)
+                elif (mostly_bot == "1"):
+                    self.tweet_sources["mostly_bot"].append(client)
+
     def run_tests(self, user, tweets, tests = "all"):
         """ Run tests
+
+        Tests are defined as methods of the BotDetector class and begin with
+        the name "test_", followed by the test's name. Each test returns an
+        integer or floating point.
 
         Args:
             user: A dictionary of the twitter user
@@ -40,8 +65,7 @@ class BotDetector(object):
                 test[5:]
                 for test in filter(lambda x: x.startswith("test_"), dir(self))
             ])
-
-        print("Tests to run: %s" % ",".join(tests))
+            print("Tests to run: %s" % ",".join(tests))
 
         for test_name in tests:
             print("Running test: %s" % test_name)
@@ -73,6 +97,36 @@ class BotDetector(object):
                 tweets_with_links += 1
 
         return tweets_with_links / num_tweets
+
+    def test_tweet_source(self, user, tweets):
+        """ Returns the average score of the tweets' sources, where -1 means
+        that all tweets came from a mostly human source, 0 means that all
+        tweets came from a mixed human/bot source, and 1 means that all tweets
+        came from a mostly bot source """
+
+        scores = []
+
+        for tweet in tweets:
+            if ("source" in tweet):
+                # this is the same cleanup algorithm as what is used in
+                # util/gen_client_list.py
+                try:
+                    source = tweet["source"].split("\"")[1].split("/")[2]
+                except IndexError:
+                    continue
+
+                if (source in self.tweet_sources["mostly_human"]):
+                    scores.append(-1)
+                elif (source in self.tweet_sources["mixed"]):
+                    scores.append(0)
+                elif (source in self.tweet_sources["mostly_bot"]):
+                    scores.append(1)
+
+        n_scores = len(scores)
+        if (n_scores == 0):
+            return 0
+        else:
+            return sum(scores)/n_scores
 
     def test_test(self, user, tweets):
         """ Always returns 1 """
