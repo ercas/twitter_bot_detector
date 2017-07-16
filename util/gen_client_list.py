@@ -37,7 +37,7 @@ def main(address, db, collection, output_file = OUTPUT_FILE):
     )
 
     for tweet in cursor:
-        source = tweet["source"]
+        source = tweet["source"].split("/")[2].split("\"")[0]
 
         if (not source in clients):
             print("\nFound new client: %s           " % source)
