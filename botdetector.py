@@ -138,7 +138,7 @@ class BotDetector(object):
                 test[5:]
                 for test in filter(lambda x: x.startswith("test_"), dir(self))
             ])
-            print("Tests to run: %s" % ",".join(tests))
+            print("Tests to run: %s" % ", ".join(tests))
 
         for test_name in tests:
             print("Running test: %s" % test_name)
@@ -233,6 +233,17 @@ class BotDetector(object):
             return 0
         else:
             return sum(scores)/n_scores
+
+    def test_malicious_urls_googlesb(self, user, tweets):
+
+        score = 0
+
+        for tweet in tweets:
+            for url in tweet["entities"]["urls"]:
+                if (self.sbclient.lookup(url["expanded_url"])):
+                    score += 1
+
+        return score
 
     ## Placeholder test definitions
 
