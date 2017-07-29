@@ -2,6 +2,7 @@
 __pycache__
 config.ini
 training/caverlee_2011
+training/caverlee_2011_tweets/
 training/crm114
 training/google_safebrowsing.db
 training/urls.bloom

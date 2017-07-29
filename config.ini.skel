@@ -1,5 +1,9 @@
 [credentials]
 google_api_key = 
+twitter_consumer_key = 
+twitter_consumer_secret = 
+twitter_access_key = 
+twitter_access_secret = 
 
 [sources]
 caverlee_2011 = https://botometer.iuni.iu.edu/bot-repository/datasets/caverlee-2011/caverlee-2011.zip
