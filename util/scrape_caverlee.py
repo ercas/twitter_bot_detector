@@ -15,6 +15,8 @@ OUTDIR = "training/caverlee_2011_tweets/"
 SPAMMERS_OUTDIR = "spammers/"
 NOT_SPAMMERS_OUTDIR = "not_spammers/"
 
+PAGE_LIMIT = 3
+
 class Scraper(object):
 
     def __init__(self):
@@ -33,7 +35,7 @@ class Scraper(object):
             auth, wait_on_rate_limit = True, wait_on_rate_limit_notify = True
         )
 
-    def scrape_user(self, user_id, page = 0):
+    def scrape_user(self, user_id, page = 0, page_limit = PAGE_LIMIT):
         tweets = []
 
         print("retrieving page %d of user %s" % (page, user_id))
@@ -49,7 +51,8 @@ class Scraper(object):
         ]
 
         if (len(tweets) > 0):
-            tweets += self.scrape_user(user_id, page + 1)
+            if ((page_limit is None) or (page < page_limit)):
+                tweets += self.scrape_user(user_id, page + 1)
 
         return tweets
 
