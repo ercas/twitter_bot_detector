@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # Wrapper interface for sbserver from https://github.com/google/safebrowsing/
 
+from .templates import FeatureExtractor
+from util import config_loader
+
 import atexit
 import os
 import pybloomfilter
@@ -166,3 +169,25 @@ class SafeBrowsing(object):
         """ Shutdown sbserver """
 
         self.proc.kill()
+
+class AverageSafeBrowsing(FeatureExtractor):
+
+    def __init__(self):
+        config = config_loader.ConfigLoader().load()
+
+        self.sbclient = SafeBrowsing(
+            api_key = config["credentials"]["google_api_key"]
+        )
+
+    def run(self, user, tweets):
+        """ Returns the number of URLs deemed malicious by the Google Safe
+        Browsing API """
+
+        score = 0
+
+        for tweet in tweets:
+            for url in tweet["entities"]["urls"]:
+                if (self.sbclient.lookup(url["expanded_url"])):
+                    score += 1
+
+        return score
