@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
+# Simple feature extractors that maintain no internal state
 
 from .templates import FeatureExtractor
-
-"""
-class Blank(FeatureExtractor):
-    def run(self, user, tweets):
-"""
 
 class Test(FeatureExtractor):
     """ For testing purposes: returns 1 """

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Wrapper interface for sbserver from https://github.com/google/safebrowsing/
+# Feature extractor that interfaces with sbserver from
+# https://github.com/google/safebrowsing/
 
 from .templates import FeatureExtractor
 from util import config_loader

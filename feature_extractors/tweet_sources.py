@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Feature extractor that checks Tweet sources against a manually-annotated list
 
 from .templates import FeatureExtractor
 from util import config_loader

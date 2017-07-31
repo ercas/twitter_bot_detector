@@ -23,3 +23,35 @@ The following data is included in this repository:
   appear to be computer-generated but with significant human interaction, ``1``
   indicates that the tweets appear to be mostly computer-generated with minimal
   human interaction, and blank indicates that a decision could not be made.
+
+usage
+-----
+
+writing feature extractors
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All source code for feature extractors is contained in the
+``feature_extractors/`` directory. To create a new feature extractor, create a
+new class that inherits from ``feature_extractors.templates.FeatureExtractor``
+and has a ``run`` method that accepts two arguments: a `Twitter User
+<https://dev.twitter.com/overview/api/users>`_ and a list of `Tweets
+<https://dev.twitter.com/overview/api/tweets>`_. The following is an example of
+a valid feature extractor:
+
+.. code-block:: python
+
+    #!/usr/bin/env python3
+
+    from .templates import FeatureExtractor
+
+    class TweetCount(FeatureExtractor):
+        """ Returns the number of tweets """
+        def run(self, user, tweets):
+            return len(tweets)
+
+..
+
+training the classifier
+~~~~~~~~~~~~~~~~~~~~~~~
+
+todo

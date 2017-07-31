@@ -19,6 +19,7 @@ class BotDetector(object):
         if (not os.path.isdir(training_dir)):
             os.mkdir(training_dir)
 
+        # dictionary of initialized feture extractors
         self.extractors = {}
 
     def run_tests(self, user, tweets, tests = "all"):
@@ -67,11 +68,7 @@ class BotDetector(object):
 
         return results
 
-if (__name__ == "__main__"):
-    import pymongo
-
-    botdetector = BotDetector()
-
+def test_random(botdetector):
     #collection = pymongo.MongoClient("localhost:27016")["local"]["geotweets"]
     #collection = pymongo.MongoClient()["local"]["geotweets"]
     collection = pymongo.MongoClient()["local"]["tweets2"]
@@ -88,3 +85,11 @@ if (__name__ == "__main__"):
         tweets = tweets,
         tests = "all"
     ))
+
+if (__name__ == "__main__"):
+    import pymongo
+
+    botdetector = BotDetector()
+    test_random(botdetector)
+    test_random(botdetector)
+    test_random(botdetector)

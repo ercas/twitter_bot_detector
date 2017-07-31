@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Feature extractor that uses the CRM114 classifier
 
 from .templates import FeatureExtractor
 from util import config_loader
