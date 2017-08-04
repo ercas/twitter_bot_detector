@@ -12,8 +12,8 @@ SPAMMERS = "%s/content_polluters.txt" % CAVERLEE_DIR
 NOT_SPAMMERS = "%s/legitimate_users.txt" % CAVERLEE_DIR
 
 OUTDIR = "training/caverlee_2011_tweets/"
-SPAMMERS_OUTDIR = "spammers/"
-NOT_SPAMMERS_OUTDIR = "not_spammers/"
+SPAMMERS_OUTDIR = "spam/"
+NOT_SPAMMERS_OUTDIR = "ham/"
 
 PAGE_LIMIT = 3
 
