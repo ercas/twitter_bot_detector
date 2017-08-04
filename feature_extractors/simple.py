@@ -23,6 +23,28 @@ class FollowersToFriendsRatio(FeatureExtractor):
     def run(self, user, tweets):
         return user["followers_count"] / user["friends_count"]
 
+class AverageRetweetsPerTweet(FeatureExtractor):
+    """ Returns the average number of retweets per tweet """
+
+    def run(self, user, tweets):
+        total_retweets = 0
+
+        for tweet in tweets:
+            total_retweets += tweet["retweet_count"]
+
+        return total_retweets/len(tweets)
+
+class AverageHashtagsPerTweet(FeatureExtractor):
+    """ Returns the average number of retweets per tweet """
+
+    def run(self, user, tweets):
+        total_hashtags = 0
+
+        for tweet in tweets:
+            total_hashtags += len(tweet["entities"]["hashtags"])
+
+        return total_hashtags/len(tweets)
+
 class TweetsWithLinksProportion(FeatureExtractor):
     """ Returns the proportion of tweets containing links """
     def run(self, user, tweets):
