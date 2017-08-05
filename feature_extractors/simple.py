@@ -8,10 +8,12 @@ class Test(FeatureExtractor):
     def run(self, user, tweets):
         return 1
 
+'''
 class Invalid(FeatureExtractor):
     """ For testing purposes: return nothing """
     def run(self, user, tweets):
         pass
+'''
 
 class UsernameLength(FeatureExtractor):
     """ Returns the length of the user's screen name """
