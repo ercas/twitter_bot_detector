@@ -118,22 +118,33 @@ class SafeBrowsing(object):
         if (not url in self.bloom_cache):
             try:
                 try:
-                    response = requests.get(url, allow_redirects = False,
-                                            timeout = PROBE_REQUEST_TIMEOUT)
+                    response = requests.get(
+                        url,
+                        allow_redirects = False,
+                        timeout = PROBE_REQUEST_TIMEOUT
+                    )
+
+                # no protocol
                 except requests.exceptions.MissingSchema:
-                    response = requests.get("http://%s" % url,
-                                            allow_redirects = False,
-                                            timeout = PROBE_REQUEST_TIMEOUT)
+                    response = requests.get(
+                        "http://%s" % url,
+                        allow_redirects = False,
+                        timeout = PROBE_REQUEST_TIMEOUT
+                    )
+
             except requests.exceptions.Timeout:
                 return url
 
             if ((response.status_code >= 200) and (response.status_code < 400)):
                 if ("location" in response.headers):
-                    print("following %s -> %s" % (
-                        url,
-                        response.headers["location"]
-                    ))
-                    return self.expand(response.headers["location"])
+                    next_url = response.headers["location"]
+
+                    # link relative to root
+                    if (next_url[0] == "/"):
+                        next_url = "/".join(url.split("/")[:3] + [next_url])
+
+                    print("following %s -> %s" % (url, next_url))
+                    return self.expand(next_url)
                 else:
                     #self.bloom_cache.add(domain)
                     self.bloom_cache.add(url)
@@ -151,6 +162,9 @@ class SafeBrowsing(object):
             _expanded: Indicates if this URL has been expaned already. URLs
                 short URLs must be expanded before being checked against the
                 database
+
+        Returns:
+            The URL's threat type, or None if it has none
         """
 
         content = self._sblookup(url)
