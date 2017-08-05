@@ -9,10 +9,10 @@ import sys
 from feature_extractors import FEATURE_EXTRACTORS
 from util import train_crm114, config_loader
 
-class BotDetector(object):
+class FeatureExtractor(object):
 
     def __init__(self):
-        """ Initialize BotDetector """
+        """ Initialize FeatureExtractor """
 
         config = config_loader.ConfigLoader().load()
 
@@ -37,46 +37,48 @@ class BotDetector(object):
                 print("Initializing %s" % extractor)
                 self.extractors[extractor] = FEATURE_EXTRACTORS[extractor]()
 
-    def run_tests(self, user, tweets, tests = "all"):
-        """ Run tests
+    def extract_features(self, user, tweets, features = "all"):
+        """ Extract features
 
-        Tests are defined as methods of the BotDetector class and begin with
-        the name "test_", followed by the test's name.
+        Features are objects inheriting from
+        feature_extractors.templates.FeatureExtractor and are defined in the
+        scripts located in the feature_extractors module.
 
-        Each test should take the user's JSON and an array of the user's tweets
-        as arguments and return an integer or floating point.
+        Each feature extractor should take the user's JSON and an array of the
+        user's tweets as arguments and return an integer or floating point.
 
-        If a test does not return an integer or floating point, it is not
-        added to the results dictionary.
+        If a feature extractor does not return an integer or floating point, it
+        is not added to the results dictionary.
 
         Args:
             user: A dictionary of the twitter user
             tweets: A list of tweet dictionaries
-            tests: A list of tests to run, or "all" to run all of them
+            features: A list of features to extract, or "all" to extract all of
+                them
 
         Returns:
-            A dictionary where the indices are the test names and the values
+            A dictionary where the indices are the feature names and the values
             are the results
         """
 
         results = {}
 
-        if (tests == "all"):
-            tests = FEATURE_EXTRACTORS.keys()
+        if (features == "all"):
+            features = FEATURE_EXTRACTORS.keys()
 
-        self.initialize_feature_extractors(tests)
+        self.initialize_feature_extractors(features)
 
-        for test_name in sorted(tests):
-            assert test_name in FEATURE_EXTRACTORS, (
-                   "Feature extractor %s is undefined" % test_name)
+        for feature_extractor in sorted(features):
+            assert feature_extractor in FEATURE_EXTRACTORS, (
+                   "Feature extractor %s is undefined" % feature_extractor)
 
-            print("Running %s" % test_name)
-            result = self.extractors[test_name].run(user, tweets)
+            print("Running %s" % feature_extractor)
+            result = self.extractors[feature_extractor].run(user, tweets)
             if ((type(result) is int) or (type(result) is float)):
-                results[test_name] = result
+                results[feature_extractor] = result
             else:
-                print("Test %s returned invalid value: %s" % (
-                    test_name, result
+                print("Feature extractor %s returned non-numeric value: %s" % (
+                    feature_extractor, result
                 ))
 
         return results
@@ -103,24 +105,25 @@ def sample_users(collection, n_users):
         ])
     ]
 
-def analyze_users(botdetector, users, output_csv_path, tests = "all"):
+def analyze_users(feature_extractor, users, output_csv_path,
+                  feature_extractors = "all"):
     """ Create feature vectors from the given users
 
     Args:
-        botdetector: A BotDetector object
+        feature_extractor: A FeatureExtractor object
         users: A list of Twitter user dicts
         output_csv_path: The path that the feature vectors should be written to
-        tests: A list of feature extractors to use, or "all" if all available
-            feature extractors should be used
+        feature_extractors: A list of feature extractors to use, or "all" if
+            all available feature extractors should be used
     """
 
-    if (tests == "all"):
-        tests = FEATURE_EXTRACTORS.keys()
-    tests = sorted(tests)
+    if (feature_extractors == "all"):
+        feature_extractors = FEATURE_EXTRACTORS.keys()
+    feature_extractors = sorted(feature_extractors)
 
     with open(output_csv_path, "w") as f:
         writer = csv.DictWriter(
-            f, fieldnames = ["user_id", "username"] + tests
+            f, fieldnames = ["user_id", "username"] + feature_extractors
         )
         writer.writeheader()
         for user in users:
@@ -132,10 +135,10 @@ def analyze_users(botdetector, users, output_csv_path, tests = "all"):
             tweets = list(collection.find({"user.id": user_id}))
             print("Collected %d tweets\n" % len(tweets))
 
-            results = botdetector.run_tests(
+            results = feature_extractor.extract_features(
                 user = user,
                 tweets = tweets,
-                tests = tests
+                feature_extractors = feature_extractors
             )
             results.update({
                 "user_id": user_id,
@@ -171,14 +174,19 @@ def load_feature_vectors(csv_path, fields_to_remove = ["user_id", "username"]):
 
     with open(csv_path, "r") as f:
         reader = csv.DictReader(f)
-        tests = sorted(set(reader.fieldnames) - set(fields_to_remove))
+        feature_extractors = sorted(
+            set(reader.fieldnames) - set(fields_to_remove)
+        )
 
         for row in reader:
             row = {
                 key: float(row[key])
-                for key in tests
+                for key in feature_extractors
             }
-            feature_vectors.append([row[test] for test in tests])
+            feature_vectors.append([
+                row[feature_extractor]
+                for feature_extractor in feature_extractors
+            ])
 
     return feature_vectors
 
@@ -214,15 +222,15 @@ if (__name__ == "__main__"):
     import pymongo
 
     collection = pymongo.MongoClient()["local"]["geotweets"]
-    botdetector = BotDetector()
+    feature_extractor = FeatureExtractor()
 
-    tests = list(FEATURE_EXTRACTORS.keys())
-    tests.remove("Invalid")
+    feature_extractors = list(FEATURE_EXTRACTORS.keys())
+    feature_extractors.remove("Invalid")
 
     analyze_users(
-        botdetector,
+        feature_extractor,
         sample_users(collection, 3),
         "out.csv",
-        tests = tests
+        feature_extractors = feature_extractors
     )
-    #test_random_users(collection, botdetector, 3)
+    #test_random_users(collection, feature_extractor, 3)
