@@ -11,3 +11,8 @@ caverlee_2011 = https://botometer.iuni.iu.edu/bot-repository/datasets/caverlee-2
 [setup]
 trained_crm114 = y
 
+[training]
+root = 
+crm114 = 
+tweet_sources = 
+classifier = 
