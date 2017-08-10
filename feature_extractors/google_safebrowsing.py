@@ -121,7 +121,8 @@ class SafeBrowsing(object):
                     response = requests.get(
                         url,
                         allow_redirects = False,
-                        timeout = PROBE_REQUEST_TIMEOUT
+                        timeout = PROBE_REQUEST_TIMEOUT,
+                        verify = False
                     )
 
                 # no protocol
@@ -129,7 +130,8 @@ class SafeBrowsing(object):
                     response = requests.get(
                         "http://%s" % url,
                         allow_redirects = False,
-                        timeout = PROBE_REQUEST_TIMEOUT
+                        timeout = PROBE_REQUEST_TIMEOUT,
+                        verify = False
                     )
 
             except requests.exceptions.Timeout:
