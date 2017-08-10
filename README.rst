@@ -10,7 +10,8 @@ Most concepts are taken from the following papers:
 * `The Rise of Social Bots <https://arxiv.org/pdf/1407.5225.pdf>`_, by Ferrara,
   Varol, Davis, Menczer, & Flammini
 * `Detecting Automation of Twitter Accounts: Are You a Human, Bot, or Cyborg?
-  <ieeexplore.ieee.org/document/6280553/>`_, by Chu, Gianvecchio, & Wang
+  <http://ieeexplore.ieee.org/document/6280553/?arnumber=6280553>`_, by Chu,
+  Gianvecchio, & Wang
 
 The following data is included in this repository:
 
