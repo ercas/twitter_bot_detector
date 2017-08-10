@@ -6,6 +6,7 @@ from util import config_loader
 
 import csv
 
+# Chu, Gianvecchio, & Wang
 class TweetSources(FeatureExtractor):
 
     def __init__(self):

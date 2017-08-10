@@ -31,7 +31,7 @@ def prompt_yn(prompt):
         else:
             return prompt_yn(prompt)
 
-
+# Chu, Gianvecchio, & Wang
 class AverageCRM114(FeatureExtractor):
 
     def __init__(self):

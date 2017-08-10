@@ -15,11 +15,13 @@ class Invalid(FeatureExtractor):
         pass
 '''
 
+# Ferrara, Varol, Davis, Menczer, & Flammini
 class UsernameLength(FeatureExtractor):
     """ Returns the length of the user's screen name """
     def run(self, user, tweets):
         return len(user["screen_name"])
 
+# Chu, Gianvecchio, & Wang
 class FollowersToFriendsRatio(FeatureExtractor):
     """ Returns a user's follower count divided by their friends count """
     def run(self, user, tweets):
@@ -30,6 +32,7 @@ class FollowersToFriendsRatio(FeatureExtractor):
         else:
             return user["followers_count"] / friends
 
+# Ferrara, Varol, Davis, Menczer, & Flammini
 class AverageRetweetsPerTweet(FeatureExtractor):
     """ Returns the average number of retweets per tweet """
 
@@ -52,6 +55,7 @@ class AverageHashtagsPerTweet(FeatureExtractor):
 
         return total_hashtags/len(tweets)
 
+# Chu, Gianvecchio, & Wang
 class TweetsWithLinksProportion(FeatureExtractor):
     """ Returns the proportion of tweets containing links """
     def run(self, user, tweets):

@@ -187,6 +187,7 @@ class SafeBrowsing(object):
 
         self.proc.kill()
 
+# Chu, Gianvecchio, & Wang
 class AverageSafeBrowsing(FeatureExtractor):
 
     def __init__(self):
