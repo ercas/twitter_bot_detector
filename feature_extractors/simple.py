@@ -23,7 +23,12 @@ class UsernameLength(FeatureExtractor):
 class FollowersToFriendsRatio(FeatureExtractor):
     """ Returns a user's follower count divided by their friends count """
     def run(self, user, tweets):
-        return user["followers_count"] / user["friends_count"]
+        friends = user["friends_count"]
+
+        if (friends == 0):
+            return 0
+        else:
+            return user["followers_count"] / friends
 
 class AverageRetweetsPerTweet(FeatureExtractor):
     """ Returns the average number of retweets per tweet """
