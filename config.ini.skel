@@ -9,9 +9,15 @@ twitter_access_secret =
 caverlee_2011 = https://botometer.iuni.iu.edu/bot-repository/datasets/caverlee-2011/caverlee-2011.zip
 
 [setup]
-trained_crm114 = y
+trained_crm114 = n
 
 [feature_extractors]
+google_sbserver_address = localhost:8080
+google_sbserver_db_path = training/google_safebrowsing.db
+google_safebrowsing_bloom = training/urls.bloom
+google_safebrowsing_bloom_capacity = 1000000
+google_safebrowsing_bloom_err_rate = 0.01
+google_safebrowsing_expand_urls = 1
 otp_bbox = 
 otp_name = 
 otp_top_n = 

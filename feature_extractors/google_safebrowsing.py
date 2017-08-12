@@ -12,15 +12,7 @@ import requests
 import subprocess
 import time
 
-ADDRESS = "localhost:8080"
-
-DB_PATH = "training/google_safebrowsing.db"
-
 BLOOM_PATH = "training/urls.bloom"
-
-BLOOM_CAPACITY = 1000000
-
-BLOOM_ERROR_RATE = 0.01
 
 PROBE_REQUEST_TIMEOUT = 1.5
 
@@ -29,10 +21,7 @@ MAX_STARTUP_TIME = 10
 
 class SafeBrowsing(object):
 
-    def __init__(self, api_key, expand_urls = True, db_path = DB_PATH,
-                 address = ADDRESS, bloom_path = BLOOM_PATH,
-                 bloom_capacity = BLOOM_CAPACITY,
-                 bloom_error_rate = BLOOM_ERROR_RATE):
+    def __init__(self):
         """ Initialize SafeBrowsing class
 
         Args:
@@ -40,22 +29,31 @@ class SafeBrowsing(object):
             expand_urls: Whether or not SafeBrowsing should attempt to expand
                 any URL that passes the initial lookup
             db_path: The path to store the safe browsing database in
-            address: The address that sbserver should serve from
-            bloom_path: The path where the bloom filter containing the url
-                expansion cache should be saved
-            bloom_capacity: The capacity of the bloom filters
-            bloom_error_rate: The error rate of the bloom filters
         """
+
+        config = config_loader.ConfigLoader().load()
+        feature_config = config["feature_extractors"]
+
+        self.expand_urls = bool(int(
+            feature_config["google_safebrowsing_expand_urls"]
+        ))
+        self.address = feature_config["google_sbserver_address"]
+
+        bloom_path = feature_config["google_safebrowsing_bloom"]
+        bloom_capacity = int(
+            feature_config["google_safebrowsing_bloom_capacity"]
+        )
+        bloom_error_rate = float(
+            feature_config["google_safebrowsing_bloom_err_rate"]
+        )
 
         self.proc = subprocess.Popen([
             "sbserver",
-            "-apikey", api_key,
-            "-db", db_path,
-            "-srvaddr", address
+            "-apikey", config["credentials"]["google_api_key"],
+            "-db", feature_config["google_sbserver_db_path"],
+            "-srvaddr", self.address
         ])
         atexit.register(self.proc.kill)
-        self.address = ADDRESS
-        self.expand_urls = expand_urls
 
         if (os.path.isfile(bloom_path)):
             self.bloom_cache = pybloomfilter.BloomFilter.open(bloom_path)
@@ -193,17 +191,13 @@ class SafeBrowsing(object):
 
 # Chu, Gianvecchio, & Wang
 class AverageSafeBrowsing(FeatureExtractor):
+    """ Returns the number of URLs deemed malicious by the Google Safe Browsing
+    API """
 
     def __init__(self):
-        config = config_loader.ConfigLoader().load()
-
-        self.sbclient = SafeBrowsing(
-            api_key = config["credentials"]["google_api_key"]
-        )
+        self.sbclient = SafeBrowsing()
 
     def run(self, user, tweets):
-        """ Returns the number of URLs deemed malicious by the Google Safe
-        Browsing API """
 
         score = 0
 
