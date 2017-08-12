@@ -11,6 +11,11 @@ caverlee_2011 = https://botometer.iuni.iu.edu/bot-repository/datasets/caverlee-2
 [setup]
 trained_crm114 = y
 
+[feature_extractors]
+otp_bbox = 
+otp_name = 
+otp_top_n = 
+
 [training]
 root = 
 crm114 = 

@@ -4,7 +4,7 @@
 import importlib
 from .templates import FeatureExtractor
 
-MODULES = [ "crm114", "google_safebrowsing", "simple", "tweet_sources" ]
+MODULES = [ "crm114", "google_safebrowsing", "simple", "travelspeed", "tweet_sources" ]
 FEATURE_EXTRACTORS = {}
 
 for module_name in MODULES:
