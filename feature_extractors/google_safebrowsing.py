@@ -137,6 +137,10 @@ class SafeBrowsing(object):
             except requests.exceptions.Timeout:
                 return url
 
+            except Exception as e:
+                print("ERROR for %s: %s" % (url, e))
+                return url
+
             if ((response.status_code >= 200) and (response.status_code < 400)):
                 if ("location" in response.headers):
                     next_url = response.headers["location"]
