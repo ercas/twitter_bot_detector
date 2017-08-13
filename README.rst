@@ -15,6 +15,8 @@ Most concepts are taken from the following papers:
 
 The following data is included in this repository:
 
+* ``training/caverlee_{ham,spam}_geotagged.txt``: Lists of user IDs from the
+  caverlee-2011 dataset associated with geotagged tweets
 * ``training/twitter_clients.csv``: A list of Twitter clients found in a subset
   of our sample data, ordered by the number of occurrances. The ``MOSTLY_BOT``
   column of the first 100 clients have manually been entered as ``-1``, ``0``,
@@ -129,6 +131,14 @@ The following is a list of all sections and keys in the ``config.ini`` file:
    * - .tweet_sources
      - string
      - The file in ``training.root`` containing annotated tweet source devices
+   * - .spam_geotagged
+     - string
+     - The file in ``training.root`` containing the spam user IDs associated
+       with geotagged tweets
+   * - .ham_geotagged
+     - string
+     - The file in ``training.root`` containing the ham user IDs associated
+       with geotagged tweets
 
 ..
 

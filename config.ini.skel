@@ -30,3 +30,5 @@ n_estimators = 10
 root = training/
 crm114 = crm114
 tweet_sources = twitter_clients.csv
+spam_geotagged = caverlee_spam_geotagged.txt
+ham_geotagged = caverlee_ham_geotagged.txt
