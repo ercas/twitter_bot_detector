@@ -99,7 +99,7 @@ class SafeBrowsing(object):
 
         return response.json()
 
-    def expand(self, url):
+    def expand(self, url, previous_url = None, n_recursions = 0):
         """ Try to "expand" a short URL
 
         Args:
@@ -110,27 +110,26 @@ class SafeBrowsing(object):
             link shortener was not used.
         """
 
-        #domain = url.split("//")[-1].split("/")[0]
+        # normalize the url
+        domain = url.split("//")[-1].split("/")[0].lower()
+        path = "/".join(url.split("//")[-1].split("/")[1:])
 
-        #if (not domain in self.bloom_cache):
+        https_url = "https://%s/%s" % (domain, path)
+        http_url = "http://%s/%s" % (domain, path)
+        if (url.startswith("https://")):
+            url = https_url
+        else:
+            url = http_url
+
         if (not url in self.bloom_cache):
-            try:
-                try:
-                    response = requests.get(
-                        url,
-                        allow_redirects = False,
-                        timeout = PROBE_REQUEST_TIMEOUT,
-                        verify = False
-                    )
 
-                # no protocol
-                except requests.exceptions.MissingSchema:
-                    response = requests.get(
-                        "http://%s" % url,
-                        allow_redirects = False,
-                        timeout = PROBE_REQUEST_TIMEOUT,
-                        verify = False
-                    )
+            try:
+                response = requests.get(
+                    url,
+                    allow_redirects = False,
+                    timeout = PROBE_REQUEST_TIMEOUT,
+                    verify = False
+                )
 
             except requests.exceptions.Timeout:
                 return url
@@ -140,6 +139,7 @@ class SafeBrowsing(object):
                 return url
 
             if ((response.status_code >= 200) and (response.status_code < 400)):
+
                 if ("location" in response.headers):
                     next_url = response.headers["location"]
 
@@ -148,10 +148,20 @@ class SafeBrowsing(object):
                         next_url = "/".join(url.split("/")[:3] + [next_url])
 
                     print("following %s -> %s" % (url, next_url))
-                    return self.expand(next_url)
+                    print("OK1")
+                    return self.expand(next_url, url, n_recursions + 1)
+
+                # no redirect instructions in the headers
                 else:
-                    #self.bloom_cache.add(domain)
                     self.bloom_cache.add(url)
+
+            # status code is not >= 200 and < 400 (e.g. 404, etc)
+            else:
+                self.bloom_cache.add(url)
+
+        # in cache
+        else:
+            pass
 
         return url
 
