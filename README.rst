@@ -84,7 +84,7 @@ The following is a list of all sections and keys in the ``config.ini`` file:
    * - .google_safebrowsing_bloom_capacity
      - int
      - The capacity of the ``AverageSafeBrowsing`` bloom filter
-   * - .google_safebrowsing_err_rate
+   * - .google_safebrowsing_bloom_err_rate
      - float
      - The error rate of the ``AverageSafeBrowsing`` bloom filter
    * - .google_safebrowsing_expand_urls
@@ -136,12 +136,21 @@ writing feature extractors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 All source code for feature extractors is contained in the
-``feature_extractors/`` directory. To create a new feature extractor, create a
-new class that inherits from ``feature_extractors.templates.FeatureExtractor``
-and has a ``run`` method that accepts two arguments: a `Twitter User
-<https://dev.twitter.com/overview/api/users>`_ and a list of `Tweets
-<https://dev.twitter.com/overview/api/tweets>`_. The following is an example of
-a valid feature extractor:
+``feature_extractors/`` directory. To create a new feature extractor:
+
+1. Create a new class that inherits from
+   ``feature_extractors.templates.FeatureExtractor``, sits in a script in the
+   ``feature_extractors/`` directory. The name of this class will be the name
+   of the feature.
+2. Define a ``run`` method that accepts two arguments: a `Twitter User
+   <https://dev.twitter.com/overview/api/users>`_ and a list of `Tweets
+   <https://dev.twitter.com/overview/api/tweets>`_, and returns a floating
+   point or integer.
+
+Classes in the feature extractor directory that inherit from
+``FeatureExtractor`` will automatically be made available to the main script.
+
+The following is an example of a valid feature extractor:
 
 .. code-block:: python
 
