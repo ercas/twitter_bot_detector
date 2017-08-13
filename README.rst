@@ -106,6 +106,16 @@ The following is a list of all sections and keys in the ``config.ini`` file:
      - int
      - The number of top speeds to average for the ``OTPTopSpeeds`` and
        ``StraightLineTopSpeeds`` feature extractors
+   * - **classifier**
+     - **section**
+     - Configuration for the classifier
+   * - .features
+     - comma-separated array of strings
+     - A list of all feature extractors to use, or ``all`` if all available
+       feature extractors should be used
+   * - .n_estimators
+     - int
+     - The number of trees to use in the random forest
    * - **training**
      - **section**
      - Contains training data
@@ -119,15 +129,8 @@ The following is a list of all sections and keys in the ``config.ini`` file:
    * - .tweet_sources
      - string
      - The file in ``training.root`` containing annotated tweet source devices
-   * - .classifier
-     - string
-     - The file in ``training.root`` where the ``twitter_bot_detector``
-       classifier will be stored
 
 ..
-
-usage
-~~~~~
 
 hacking
 -------

@@ -22,8 +22,11 @@ otp_bbox =
 otp_name = 
 otp_top_n = 
 
+[classifier]
+features = all
+n_estimators = 10
+
 [training]
-root = 
-crm114 = 
-tweet_sources = 
-classifier = 
+root = training/
+crm114 = crm114
+tweet_sources = twitter_clients.csv

@@ -122,26 +122,31 @@ class Classifier(object):
         features: A list of features being considered
     """
 
-    def __init__(self, collection, n_estimators = 10, features = "all"):
-        """ Initializes Classifier
+    def __init__(self):
+        """ Initializes Classifier """
 
-        Args:
-            collection: A pymongo.collection.Collection object pointing to the
-                MongoDB collection containing the tweets
-            n_estimators: The number of trees to use in the random forest
-            features: A list of features to extract, or "all" if all available
-                feature extractors should be used
-        """
+        config = config_loader.ConfigLoader().load()
+        features = config["classifier"]["features"].split(",")
 
-        self.collection = collection
+        self.collection = None
         self.feature_extractor = FeatureExtractor()
         self.classifier = sklearn.ensemble.RandomForestClassifier(
-            n_estimators = n_estimators
+            n_estimators = int(config["classifier"]["n_estimators"])
         )
 
-        if (features == "all"):
+        if ((features == "all") or (features == ["all"])):
             features = FEATURE_EXTRACTORS.keys()
         self.features = sorted(features)
+
+    def connect(self, db, collection):
+        """ Connect to a MongoDB collection
+
+        Args:
+            db: The database to connect to
+            collection: The collection to connect to
+        """
+
+        self.collection = pymongo.MongoClient()[db][collection]
 
     def collect_tweets(self, user_id):
         """ Query Mongo for tweets by a user
@@ -155,6 +160,8 @@ class Classifier(object):
         Returns:
             A dict containing the user's Tweet objects and a User object
         """
+
+        assert self.collection is not None
 
         data = {
             "tweets": [],
@@ -339,19 +346,28 @@ class Classifier(object):
 if (__name__ == "__main__"):
     import pymongo
 
-    collection = pymongo.MongoClient()["local"]["geotweets"]
-    classifier = Classifier(collection)
+    classifier = Classifier()
 
-    print("Sampling user IDs")
-    user_ids = sample_user_ids(collection, 3)
+    # train spam
+    classifier.connect("caverlee_2011", "spam")
+    classifier.gen_feature_matrix(
+        [13076522,16894297,16689819,5169871,16103653,11756702,14451520,10870512,16088048,16062813,15791454,10500072,15109598,16827174,8729092,11073902,16069206,15280950,5693062,15267659,1303381,16876002,15470773,15265269,11721472,16492068,16695328,15831817,15417706,16751024,14239363,16578783,11488822,15235767,14170609,14515351,16732408,15575441,6267832,14548188,14213042,15903869,16681194,16712700,15399951,13898062,7891352,15038084,16614336,15670317,14565842,14675924,15793787,14486811,4046051,16543782,15042759,15789733,15057807,2269491,14138443,16325332,16091975,16531768,10336042,14815178,16807407,14151220,16810740,2157321,14703881,16680079,15690188,10278192,15933218,14335577,12516722,16868319,964981,8208482,7601182,13694202,14744838,15930396,14306558,16736650,14185487,15854078,16250671,16722428,14507201,11403462,14947437,15412019,15958265,15211524,16194524,16656453,16507195,16616272],
+        "spam.csv"
+    )
 
-    classifier.gen_feature_matrix(user_ids, "out.csv")
-    classifier.train("out.csv", "out.csv")
+    # train ham
+    classifier.connect("caverlee_2011", "ham")
+    classifier.gen_feature_matrix(
+        [1479681,746493,5768612,6226962,3407301,6000292,3853071,639393,930581,431449710,5490362,4666751,1754641,6185922,5942122,5734332,3279441,5545702,5982032,4183941,5499142,5729562,6394912,1114011,6524962,5975342,709433,4148811,2192201,653843,823806,3895231,647073,6199812,6116332,784998,6462652,9375,5045711,5187721,2986671,1101481,1144181,5610822,3557911,1551941,808851,4795431,813669,1919751,5804942,2304641,6518212,1524641,4472691,5585092,2615,1095931,6283142,6060782,6393752,46183,6245442,3488401,3297261,2681441,5536782,5460902,12527,5486552,716013,756206,5641112,678323,6515802,5849872,6430992,2149371,4324361,4202781,3817911,56733,3602891,859571,3671881,6433962,5958822,5429672,3789291,5867462,5777162,666633,5513932,5663072,849591,6258452,3975731,1357191,5525392,5995592],
+        "ham.csv"
+    )
+
+    # predict
+    classifier.connect("caverlee_2011", "ham")
+    classifier.train("spam.csv", "ham.csv")
     classifier.save("out.pkl")
-
-    new_user_ids = sorted(sample_user_ids(collection, 3))
+    user_ids = [6367262,5768612,5429772,13602,3111701,4324361,859571,1421521,3655401,56733]
     print("\n========== Making predictions: %s" % ", ".join([
-        str(x) for x in new_user_ids
+        str(x) for x in user_ids
     ]))
-    print(classifier.predict(new_user_ids))
-    #test_random_users(collection, feature_extractor, 3)
+    print(classifier.predict(user_ids))
