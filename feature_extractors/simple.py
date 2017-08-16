@@ -87,4 +87,4 @@ class UserIsVerified(FeatureExtractor):
 class UserJoinDate(FeatureExtractor):
     """ Returns the user's join date as a Unix timestamp """
     def run(self, user, tweets):
-        return int(dateutil.parser.parse(user["created_ath"]))
+        return int(dateutil.parser.parse(user["created_at"]))
